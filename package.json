@@ -1,0 +1,34 @@
+{
+  "name": "playwright-ts-toolkit",
+  "version": "1.0.0",
+  "description": "Toolkit de helpers, fixtures e utilitários para automação Playwright + TypeScript",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "private": false,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:qa": "cross-env TEST_ENV=qa playwright test",
+    "test:staging": "cross-env TEST_ENV=staging playwright test",
+    "test:prod": "cross-env TEST_ENV=prod playwright test",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "test-automation",
+    "e2e",
+    "testing"
+  ],
+  "author": "Matheus Neves",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.3.0",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.3.1",
+    "typescript": "^5.9.3"
+  }
+}

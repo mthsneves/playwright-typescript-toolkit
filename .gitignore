@@ -1,0 +1,13 @@
+node_modules/
+downloads/*
+!downloads/.gitkeep
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.env
+config/.env.*
+!config/.env.example
+dist/
+coverage/
+.DS_Store
