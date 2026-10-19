@@ -1,41 +1,74 @@
-# Playwright TS Toolkit 🎭⚡
+# Playwright TypeScript Toolkit 🎭⚡
 
-[![Playwright Tests CI](https://github.com/matheusneves/playwright-ts-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/matheusneves/playwright-ts-toolkit/actions)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
-[![Playwright](https://img.shields.io/badge/Playwright-1.58+-green.svg)](https://playwright.dev/)
+[![Playwright Tests CI](https://github.com/mthsneves/playwright-typescript-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/mthsneves/playwright-typescript-toolkit/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.58+-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Boilerplate e toolkit corporativo para automação de testes End-to-End e de API com Playwright e TypeScript.**  
-> Projetado com foco em resiliência, tipagem estrita, isolamento de fixtures, geração e validação de massas brasileiras (CPF, CNPJ, telefone) e execução contínua via CI/CD.
+> **Boilerplate e toolkit de nível sênior para automação de testes End-to-End (E2E) e de API utilizando Playwright e TypeScript.**  
+> Desenvolvido com foco em alta resiliência, auto-waiting nativo, injeção desacoplada via custom fixtures, geração e validação de massas de dados brasileiras (CPF, CNPJ, telefone celular) e integração contínua (CI/CD).
 
 ---
 
 ## 📋 Sumário
-1. [Visão Geral](#-visão-geral)
+1. [Visão Geral e Arquitetura](#-visão-geral-e-arquitetura)
 2. [Pré-requisitos](#-pré-requisitos)
-3. [Instalação](#-instalação)
-4. [Estrutura do Projeto](#-estrutura-do-projeto)
-5. [Tabela de Métodos e Utilitários](#-tabela-de-métodos-e-utilitários)
-   - [DataGenerator](#1-datagenerator-srcutilsdatageneratorts)
-   - [UIHelper](#2-uihelper-srchelpersuihelperts)
-   - [AuthHelper](#3-authhelper-srchelpersauthhelperts)
-   - [ApiHelper](#4-apihelper-srchelpersapihelperts)
-6. [Configuração de Ambientes](#-configuração-de-ambientes-multi-env)
-7. [Como Utilizar este Toolkit em Outro Projeto](#-como-utilizar-este-toolkit-em-outro-projeto)
-8. [Diferenças em Relação ao Cypress](#-diferenças-em-relação-ao-cypress)
-9. [Boas Práticas de Automação](#-boas-práticas-de-automação)
-10. [Execução e Scripts](#-execução-e-scripts)
+3. [Instalação e Quick Start](#-instalação-e-quick-start)
+4. [Estrutura do Repositório](#-estrutura-do-repositório)
+5. [Documentação Completa de Utilitários e Helpers](#-documentação-completa-de-utilitários-e-helpers)
+   - [DataGenerator (Geração e Validação de Dados)](#1-datagenerator-srcutilsdatageneratorts)
+   - [UIHelper (Interações Resilientes e UI)](#2-uihelper-srchelpersuihelperts)
+   - [AuthHelper (Login e Controle de Sessão)](#3-authhelper-srchelpersauthhelperts)
+   - [ApiHelper (API Seeding e Requisições REST)](#4-apihelper-srchelpersapihelperts)
+   - [Custom Fixtures (test.extend)](#5-custom-fixtures-srcfixturescustomfixturests)
+6. [Configuração de Ambientes Multi-Env](#-configuração-de-ambientes-multi-env)
+7. [Diferenças Chave em Relação ao Cypress](#-diferenças-chave-em-relação-ao-cypress)
+8. [Boas Práticas de Automação](#-boas-práticas-de-automação)
+9. [Como Adotar em Outro Projeto](#-como-adotar-em-outro-projeto)
+10. [Scripts Disponíveis](#-scripts-disponíveis)
+11. [Pipeline CI/CD](#-pipeline-cicd)
+12. [Licença e Autoria](#-licença-e-autoria)
 
 ---
 
-## 🎯 Visão Geral
+## 🏛️ Visão Geral e Arquitetura
 
-O **Playwright TS Toolkit** fornece uma camada estruturada de abstração que resolve problemas comuns em pipelines de testes corporativos:
-- **Resiliência real**: elimina esperas estáticas (`waitForTimeout`) substituindo-as por polling determinístico e tolerância a re-renderizações.
-- **Fixtures desacopladas**: substitui comandos globais pelo sistema nativo `test.extend` do Playwright, garantindo autocompletion no VS Code e contexto estritamente isolado entre workers paralelos.
-- **Massa de dados nativa para o Brasil**: geradores e validadores matemáticos de CPF e CNPJ (com distribuição equiprovável de dígitos e rejeição de sequências inválidas), além de celulares e e-mails únicos.
-- **Suporte híbrido (UI + API)**: injeção rápida de dados (seeding) via API direto nos testes de interface, reduzindo o tempo de execução de minutos para segundos.
-- **Multi-ambiente resiliente**: suporte nativo a múltiplos ambientes (`qa`, `staging`, `prod`) sem derrubar a execução se um arquivo de configuração estiver ausente.
+O **Playwright TypeScript Toolkit** foi projetado para superar as fragilidades e limitações comuns em suites de testes legadas (como esperas estáticas cegas, comandos globais acoplados e testes instáveis):
+
+```
+                        ┌────────────────────────┐
+                        │   Playwright Runner    │
+                        │     (test.extend)      │
+                        └───────────┬────────────┘
+                                    │
+           ┌────────────────────────┼────────────────────────┐
+           ▼                        ▼                        ▼
+   ┌───────────────┐        ┌───────────────┐        ┌───────────────┐
+   │    Fixture    │        │    Fixture    │        │    Fixture    │
+   │     "ui"      │        │    "auth"     │        │     "api"     │
+   │  (UIHelper)   │        │ (AuthHelper)  │        │  (ApiHelper)  │
+   └───────┬───────┘        └───────┬───────┘        └───────┬───────┘
+           │                        │                        │
+           ▼                        ▼                        ▼
+   ┌───────────────┐        ┌───────────────┐        ┌───────────────┐
+   │ Page Actions  │        │ Sessão / Auth │        │  API Seeding  │
+   │ Auto-waiting  │        │ Token Storage │        │ Injeção Dados │
+   └───────┬───────┘        └───────────────┘        └───────────────┘
+           │
+           ▼
+   ┌─────────────────────────────────────────────────────────────────┐
+   │                  DataGenerator (Massa de Dados)                 │
+   │   CPF / CNPJ (Válidos + Validadores) | Emails | Celulares BR    │
+   └─────────────────────────────────────────────────────────────────┘
+```
+
+### Principais Pilares:
+- **Resiliência Real**: Sem `waitForTimeout` estático. Todo polling é determinístico, baseado no estado real do DOM e tolerante a re-renderizações.
+- **Actionability Preservada**: `force: false` por padrão, respeitando as regras nativas do Playwright para garantir que o usuário real consiga interagir com os elementos.
+- **Fixtures Tipadas**: Injeção direta de `ui`, `auth` e `api` sem poluir o escopo global e com autocompletion inteligente no VS Code.
+- **Massas de Dados Realistas**: Algoritmos estritos de dígitos verificadores para CPF e CNPJ com distribuição equiprovável de números e funções de validação incluídas.
+- **Testes Híbridos (API Seeding)**: Crie registros no banco de dados via API em ~100ms e teste apenas a jornada crítica na UI.
 
 ---
 
@@ -43,232 +76,271 @@ O **Playwright TS Toolkit** fornece uma camada estruturada de abstração que re
 
 - **Node.js**: versão `>= 18.0.0` (recomendado v20+ LTS).
 - **NPM**: versão `>= 9.0.0`.
-- **Git**: instalado e configurado no terminal.
+- **Git**: instalado e configurado no sistema.
 
 ---
 
-## 🚀 Instalação
-
-Clone o repositório e instale as dependências:
+## 🚀 Instalação e Quick Start
 
 ```bash
-# Clone o repositório
-git clone https://github.com/matheusneves/playwright-ts-toolkit.git
-cd playwright-ts-toolkit
+# 1. Clone o repositório
+git clone https://github.com/mthsneves/playwright-typescript-toolkit.git
+cd playwright-typescript-toolkit
 
-# Instale as dependências do projeto
+# 2. Instale as dependências
 npm install
 
-# Instale os navegadores gerenciados pelo Playwright
+# 3. Instale o navegador Chromium gerenciado pelo Playwright
 npx playwright install chromium
 
-# (No Linux/WSL, se faltarem bibliotecas do sistema)
-npx playwright install --with-deps chromium
+# 4. Execute a suíte de testes de validação
+npm test
+```
+
+### Exemplo Rápido de Teste (Quick Start):
+
+```typescript
+import { test, expect } from "./src";
+
+test("meu primeiro teste com o toolkit", async ({ page, ui }) => {
+  await page.goto("https://demo.playwright.dev/todomvc");
+  await ui.waitForPageLoad();
+
+  // Preenche dinamicamente com nome aleatório
+  const item = await ui.fillGeneratedName(".new-todo", "Aprender");
+  await page.keyboard.press("Enter");
+
+  // Valida presença na lista
+  await ui.validateTextInElement(".todo-list", item);
+});
 ```
 
 ---
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura do Repositório
 
 ```text
-playwright-ts-toolkit/
+playwright-typescript-toolkit/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # Pipeline GitHub Actions (typecheck + smoke tests)
+│       └── ci.yml                     # Pipeline GitHub Actions (typecheck, tests, artifacts)
 ├── config/
-│   ├── .env.example              # Modelo de variáveis de ambiente versionado
-│   └── .env.qa                   # (Opcional, ignorado no git)
-├── downloads/
-│   └── .gitkeep                  # Pasta monitorada para downloads de testes
+│   ├── .env.example                  # Template com variáveis de ambiente padrão
+│   └── .env.qa                       # Exemplo de configuração específica (ignorado no git)
 ├── docs/
-│   └── EXEMPLOS.md               # Exemplos práticos detalhados de cada cenário
+│   └── EXEMPLOS.md                   # 5 cenários práticos e funcionais detalhados
+├── downloads/
+│   └── .gitkeep                      # Diretório monitorado para downloads em testes
 ├── src/
 │   ├── fixtures/
-│   │   └── customFixtures.ts     # Extensão do runner (ui, auth, api)
+│   │   └── customFixtures.ts         # Fixtures personalizadas (ui, auth, api via test.extend)
 │   ├── helpers/
-│   │   ├── apiHelper.ts          # Requisições REST, autenticação e API seeding
-│   │   ├── authHelper.ts         # Login resiliente, bypass de sessões e logout
-│   │   └── uiHelper.ts           # Interações resilientes de UI, downloads e polling
+│   │   ├── apiHelper.ts              # Requisições REST, autenticação e seeding de dados
+│   │   ├── authHelper.ts             # Login resiliente, bypass de sessões e logout
+│   │   └── uiHelper.ts               # Helpers de UI, actionability, polling e downloads
 │   ├── utils/
-│   │   └── dataGenerator.ts      # Geração e validação de CPF, CNPJ, dados de teste
-│   └── index.ts                  # Reexportação unificada de todos os módulos
+│   │   └── dataGenerator.ts          # Geração e validação de massas brasileiras
+│   └── index.ts                      # Ponto único de exportação da biblioteca
 ├── tests/
 │   └── smoke/
-│       ├── dataGenerator.spec.ts # Testes unitários puros da massa de dados
-│       ├── fixtures.spec.ts      # Testes de injeção e API com servidor mock local
-│       └── uiHelper.spec.ts      # Testes ponta a ponta dos helpers de UI
-├── CHANGELOG.md                  # Histórico de versões e alterações de comportamento
-├── LICENSE                       # Licença MIT (Matheus Neves)
-├── package.json                  # Scripts e dependências
-├── playwright.config.ts          # Configurações do Playwright com suporte multi-env
-├── README.md                     # Documentação principal
-└── tsconfig.json                 # Configuração do TypeScript (strict, ES2020, commonjs)
+│       ├── dataGenerator.spec.ts     # Smoke tests unitários de massa de dados
+│       ├── fixtures.spec.ts          # Smoke tests de injeção e API (mock HTTP local)
+│       └── uiHelper.spec.ts          # Smoke tests E2E de UI (TodoMVC + páginas dinâmicas)
+├── .gitignore                        # Regras estritas de exclusão de artefatos temporários
+├── CHANGELOG.md                      # Histórico de versões e mudanças de comportamento
+├── LICENSE                           # Licença MIT (Matheus Neves)
+├── package.json                      # Configuração do projeto, dependências e scripts
+├── playwright.config.ts              # Configuração do Playwright com suporte multi-env
+├── README.md                         # Documentação principal
+└── tsconfig.json                     # Configuração do TypeScript (strict, CommonJS, ES2020)
 ```
 
 ---
 
-## 📖 Tabela de Métodos e Utilitários
+## 📖 Documentação Completa de Utilitários e Helpers
 
 ### 1. `DataGenerator` (`src/utils/dataGenerator.ts`)
 
-| Método | Assinatura | Descrição | Exemplo de Uso |
+Classe estática com utilitários para geração e validação de dados dinâmicos e sem colisões.
+
+| Método | Assinatura | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `cpf` | `cpf(formatted = true): string` | Gera um CPF matematicamente válido com dígitos uniformes, rejeitando sequências de dígitos iguais. | `const cpf = DataGenerator.cpf();` |
-| `isValidCpf` | `isValidCpf(cpf: string): boolean` | Valida as regras da Receita Federal para um CPF (com ou sem máscara). | `DataGenerator.isValidCpf("123.456.789-00");` |
-| `cnpj` | `cnpj(formatted = true): string` | Gera um CNPJ matematicamente válido com filial padrão `0001`. | `const cnpj = DataGenerator.cnpj(false);` |
-| `isValidCnpj` | `isValidCnpj(cnpj: string): boolean` | Valida os dígitos verificadores de um CNPJ (com ou sem máscara). | `DataGenerator.isValidCnpj("11.222.333/0001-81");` |
-| `email` | `email(prefix = "teste"): string` | Gera um e-mail com timestamp e hash sem risco de colisão em execuções paralelas. | `const email = DataGenerator.email("usuario");` |
-| `phone` | `phone(formatted = true): string` | Gera número de celular brasileiro com DDD válido e nono dígito (9). | `const tel = DataGenerator.phone();` |
-| `fullName` | `fullName(prefix = "Usuario"): string` | Gera um nome composto acompanhado de hash identificador. | `const nome = DataGenerator.fullName("Cliente");` |
-| `uniqueHash` | `uniqueHash(length = 8): string` | Gera um hash alfanumérico pseudoaleatório de tamanho customizável. | `const hash = DataGenerator.uniqueHash(6);` |
-| `normalizeText`| `normalizeText(text: string): string` | Remove acentuação/diacríticos, converte para minúsculas e reduz múltiplos espaços. | `DataGenerator.normalizeText(" Ação "); // "acao"` |
+| `cpf` | `cpf(formatted = true): string` | Gera CPF matematicamente válido com distribuição uniforme, descartando sequências com todos os dígitos iguais. | `const cpf = DataGenerator.cpf();` |
+| `isValidCpf` | `isValidCpf(cpf: string): boolean` | Valida se um CPF atende às regras da Receita Federal (com ou sem máscara). | `DataGenerator.isValidCpf("111.111.111-11"); // false` |
+| `cnpj` | `cnpj(formatted = true): string` | Gera CNPJ matematicamente válido com filial padrão `0001`. | `const cnpj = DataGenerator.cnpj(false);` |
+| `isValidCnpj` | `isValidCnpj(cnpj: string): boolean` | Valida se um CNPJ possui dígitos verificadores corretos. | `DataGenerator.isValidCnpj("11.222.333/0001-81");` |
+| `email` | `email(prefix = "teste"): string` | Gera e-mail único com timestamp e hash para evitar colisão em testes concorrentes. | `const email = DataGenerator.email("qa");` |
+| `phone` | `phone(formatted = true): string` | Gera número de celular nacional com DDD (11-99) no formato móvel brasileiro. | `const fone = DataGenerator.phone(true);` |
+| `fullName` | `fullName(prefix = "Usuario"): string` | Gera nome acompanhado de identificador alfanumérico único. | `const nome = DataGenerator.fullName("Cliente");` |
+| `uniqueHash` | `uniqueHash(length = 8): string` | Gera hash alfanumérico aleatório do tamanho desejado. | `const hash = DataGenerator.uniqueHash(6);` |
+| `normalizeText`| `normalizeText(text: string): string` | Remove acentuação/diacríticos, substitui espaços extras e converte para minúsculas. | `DataGenerator.normalizeText(" Ação "); // "acao"` |
 
 ---
 
 ### 2. `UIHelper` (`src/helpers/uiHelper.ts`)
 
-Injetado automaticamente na fixture `ui`:
+Injetado automaticamente através da fixture `ui`. Facilita interações complexas de tela e garante estabilidade.
 
-| Método | Assinatura | Descrição | Exemplo de Uso |
+| Método | Assinatura | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `waitForPageLoad` | `waitForPageLoad(waitForNetworkIdle = false): Promise<void>` | Aguarda os estados `domcontentloaded` e `load`. Opcionalmente suporta `networkidle`. | `await ui.waitForPageLoad();` |
-| `interactWithElement` | `interactWithElement(el, action, val?, opts?): Promise<void>` | Executa ações comuns (`click`, `containsClick`, `type`, `clear`). Por padrão, `force: false`. | `await ui.interactWithElement("#input", "type", "Texto");` |
-| `clickWhenVisibleAndEnabled` | `clickWhenVisibleAndEnabled(el, opts?): Promise<void>` | Aguarda explicitamente o elemento estar visível e habilitado antes do clique. | `await ui.clickWhenVisibleAndEnabled("#btn-salvar");` |
-| `selectOptionWithText` | `selectOptionWithText(el, optionText, opts?): Promise<void>` | Clica no dropdown e seleciona a opção usando `getByRole("option")` com fallback para `li`. | `await ui.selectOptionWithText("#combo", "Opção A");` |
-| `selectAutocomplete` | `selectAutocomplete(el, value, opts?): Promise<void>` | Preenche o campo via `pressSequentially` (delay 50ms) e clica na opção correspondente. | `await ui.selectAutocomplete("#cidade", "São Paulo", { type: true });` |
-| `clickUntilVisible` | `clickUntilVisible(btn, target, opts?): Promise<void>` | Clica repetidamente com intervalo até que o elemento alvo apareça (tolerante a re-render). | `await ui.clickUntilVisible(".toggle", ".clear-completed");` |
-| `validateTextInElement` | `validateTextInElement(el, texts, opts?): Promise<void>` | Realiza asserção de um ou múltiplos textos em um container/elemento. | `await ui.validateTextInElement(".card", ["Item 1", "R$ 10"]);` |
-| `searchForm` | `searchForm(fields): Promise<void>` | Preenche múltiplos campos dinamicamente, suportando autocompletes e digitação sequencial. | `await ui.searchForm([{ selector: "#nome", value: "Ana" }]);` |
-| `reloadUntilVisible` | `reloadUntilVisible(el, textOrOpts?, opts?): Promise<void>` | Recarrega a página em loop inteligente até que o texto normalizado apareça no elemento. | `await ui.reloadUntilVisible(".status", "CONCLUÍDO");` |
-| `validateDownload` | `validateDownload(triggerAction, opts?): Promise<string>` | Monitora o evento nativo de download e retorna o nome sugerido do arquivo. | `const name = await ui.validateDownload(() => btn.click());` |
-| `validateDownloadDetailed`| `validateDownloadDetailed(triggerAction, saveTo?, opts?): Promise<{ fileName, path }>` | Valida o download e opcionalmente salva o arquivo no diretório especificado em disco. | `const res = await ui.validateDownloadDetailed(trigger, "downloads");` |
-| `fillGeneratedName` | `fillGeneratedName(el, prefix?, opts?): Promise<string>` | Preenche o campo com um nome gerado dinamicamente e retorna o valor preenchido. | `const nome = await ui.fillGeneratedName("#nome");` |
-| `fillGeneratedEmail`| `fillGeneratedEmail(el, prefix?, opts?): Promise<string>` | Preenche com um e-mail único e retorna o endereço gerado. | `const email = await ui.fillGeneratedEmail("#email");` |
+| `waitForPageLoad` | `waitForPageLoad(waitForNetworkIdle = false): Promise<void>` | Aguarda os estados `domcontentloaded` e `load`. Opcionalmente aguarda `networkidle`. | `await ui.waitForPageLoad();` |
+| `interactWithElement` | `interactWithElement(el, action, val?, opts?): Promise<void>` | Executa ações comuns (`click`, `containsClick`, `type`, `clear`). Por padrão, `force: false`. | `await ui.interactWithElement("#input", "type", "Valor");` |
+| `clickWhenVisibleAndEnabled` | `clickWhenVisibleAndEnabled(el, opts?): Promise<void>` | Aguarda explicitamente o elemento estar visível e habilitado antes do clique. | `await ui.clickWhenVisibleAndEnabled("#btn-confirmar");` |
+| `selectOptionWithText` | `selectOptionWithText(el, optionText, opts?): Promise<void>` | Abre o dropdown e clica na opção usando `getByRole("option")` com fallback para `li`. | `await ui.selectOptionWithText("#combo", "São Paulo");` |
+| `selectAutocomplete` | `selectAutocomplete(el, value, opts?): Promise<void>` | Digita via `pressSequentially` (delay 50ms) e clica na opção correspondente. | `await ui.selectAutocomplete("#cidade", "Curitiba", { type: true });` |
+| `clickUntilVisible` | `clickUntilVisible(btn, target, opts?): Promise<void>` | Clica repetidamente até o alvo aparecer, com tolerância a re-renderizações. | `await ui.clickUntilVisible(".item", ".btn-remover");` |
+| `validateTextInElement` | `validateTextInElement(el, texts, opts?): Promise<void>` | Valida a presença de um ou múltiplos textos em um elemento container. | `await ui.validateTextInElement(".card", ["Confirmado", "R$ 100"]);` |
+| `searchForm` | `searchForm(fields): Promise<void>` | Preenche múltiplos campos dinamicamente, suportando autocompletes e digitação com atraso. | `await ui.searchForm([{ selector: "#nome", value: "Carlos" }]);` |
+| `reloadUntilVisible` | `reloadUntilVisible(el, textOrOpts?, opts?): Promise<void>` | Recarrega a página em loop inteligente até que o texto normalizado apareça no elemento. | `await ui.reloadUntilVisible(".badge", "CONCLUÍDO");` |
+| `validateDownload` | `validateDownload(triggerAction, opts?): Promise<string>` | Monitora o evento nativo de download e retorna o nome sugerido do arquivo. | `const file = await ui.validateDownload(() => btn.click());` |
+| `validateDownloadDetailed`| `validateDownloadDetailed(triggerAction, saveTo?, opts?): Promise<{ fileName, path }>` | Valida o download e salva o arquivo no diretório especificado em disco. | `const res = await ui.validateDownloadDetailed(trigger, "downloads");` |
+| `fillGeneratedName` | `fillGeneratedName(el, prefix?, opts?): Promise<string>` | Preenche campo com nome dinâmico e retorna o valor preenchido. | `const nome = await ui.fillGeneratedName("#nome");` |
+| `fillGeneratedEmail`| `fillGeneratedEmail(el, prefix?, opts?): Promise<string>` | Preenche com e-mail único e retorna o valor preenchido. | `const email = await ui.fillGeneratedEmail("#email");` |
 | `fillGeneratedCPF` | `fillGeneratedCPF(el, formatted?, opts?): Promise<string>` | Preenche com CPF válido e retorna o valor preenchido. | `const cpf = await ui.fillGeneratedCPF("#cpf");` |
 | `fillGeneratedCNPJ`| `fillGeneratedCNPJ(el, formatted?, opts?): Promise<string>` | Preenche com CNPJ válido e retorna o valor preenchido. | `const cnpj = await ui.fillGeneratedCNPJ("#cnpj");` |
-| `fillGeneratedPhone`| `fillGeneratedPhone(el, formatted?, opts?): Promise<string>` | Preenche com celular brasileiro válido e retorna o valor preenchido. | `const tel = await ui.fillGeneratedPhone("#tel");` |
+| `fillGeneratedPhone`| `fillGeneratedPhone(el, formatted?, opts?): Promise<string>` | Preenche com celular brasileiro e retorna o valor preenchido. | `const tel = await ui.fillGeneratedPhone("#tel");` |
 
 ---
 
 ### 3. `AuthHelper` (`src/helpers/authHelper.ts`)
 
-Injetado automaticamente na fixture `auth`:
+Injetado automaticamente através da fixture `auth`. Gerencia login resiliente e encerramento de sessão.
 
-| Método | Assinatura | Descrição | Exemplo de Uso |
+| Método | Assinatura | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `loginPlatform` | `loginPlatform(email?, password?, opts?): Promise<void>` | Limpa cookies/storage, preenche credenciais (ou fallback `.env`), trata modal de sessão ativa e valida saída da tela de login. | `await auth.loginPlatform("qa@empresa.com", "senha123");` |
+| `loginPlatform` | `loginPlatform(email?, password?, opts?): Promise<void>` | Limpa cookies/storage, suporta rotas hash (`#/login`), trata modal de sessão ativa concorrente, detecta mensagens de erro e assegura redirecionamento. | `await auth.loginPlatform("qa@empresa.com", "senha123");` |
 | `logout` | `logout(opts?): Promise<void>` | Abre o menu de perfil do usuário, clica no botão de logout após espera explícita e limpa o storage. | `await auth.logout();` |
 
 ---
 
 ### 4. `ApiHelper` (`src/helpers/apiHelper.ts`)
 
-Injetado automaticamente na fixture `api`:
+Injetado automaticamente através da fixture `api`. Executa operações diretas no backend.
 
-| Método | Assinatura | Descrição | Exemplo de Uso |
+| Método | Assinatura | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `loginViaAPI` | `loginViaAPI(user?, pass?, loginEndpoint?): Promise<string>` | Autentica diretamente no endpoint de API e extrai o token JWT. | `const token = await api.loginViaAPI("user", "pass");` |
-| `seedRecordViaAPI`| `seedRecordViaAPI<T>(endpoint, payload, token?): Promise<T>` | Cria registros rápidos no backend via POST e retorna a resposta tipada. | `const res = await api.seedRecordViaAPI<Item>("/itens", dados, token);` |
+| `loginViaAPI` | `loginViaAPI(user?, pass?, loginEndpoint?): Promise<string>` | Autentica diretamente na API e extrai o token JWT retornado. | `const token = await api.loginViaAPI("user", "pass");` |
+| `seedRecordViaAPI`| `seedRecordViaAPI<T>(endpoint, payload, token?): Promise<T>` | Cria registros rápidos no backend via POST e retorna a resposta tipada `<T>`. | `const res = await api.seedRecordViaAPI<Item>("/pedidos", dados, token);` |
 
 ---
 
-## 🌐 Configuração de Ambientes (Multi-env)
+### 5. `Custom Fixtures` (`src/fixtures/customFixtures.ts`)
 
-As credenciais e URLs são configuradas por ambiente na pasta `config/`:
+Extensão nativa do Playwright que disponibiliza os helpers de forma lazy:
 
-1. Copie o arquivo de exemplo para o ambiente desejado:
+```typescript
+import { test, expect } from "./src";
+
+test("Exemplo com múltiplas fixtures", async ({ page, ui, auth, api }) => {
+  // ui   -> Instância de UIHelper
+  // auth -> Instância de AuthHelper
+  // api  -> Instância de ApiHelper (valida se API_BASE_URL está configurada)
+});
+```
+
+---
+
+## 🌐 Configuração de Ambientes Multi-Env
+
+O carregamento de variáveis baseia-se em `TEST_ENV` gerenciado pelo `cross-env`:
+
+1. Copie o template para os ambientes necessários:
    ```bash
    cp config/.env.example config/.env.qa
    cp config/.env.example config/.env.staging
    cp config/.env.example config/.env.prod
    ```
-2. Preencha as credenciais correspondentes no arquivo gerado:
+2. Configure as credenciais no arquivo correspondente:
    ```properties
    BASE_URL=https://qa.sua-aplicacao.com
    API_BASE_URL=https://api-qa.sua-aplicacao.com
-   USER_EMAIL=usuario.qa@empresa.com
+   USER_EMAIL=automacao.qa@empresa.com
    USER_PASSWORD=SenhaSegura@123
    ```
-3. Execute seus testes com o ambiente desejado via `cross-env`:
+3. Execute apontando para o ambiente desejado:
    ```bash
-   npm run test:qa       # Carrega config/.env.qa
-   npm run test:staging  # Carrega config/.env.staging
-   npm run test:prod     # Carrega config/.env.prod
+   npm run test:qa       # Utiliza config/.env.qa
+   npm run test:staging  # Utiliza config/.env.staging
+   npm run test:prod     # Utiliza config/.env.prod
    ```
 
 > [!NOTE]
-> Se o arquivo `config/.env.<TEST_ENV>` não existir, o toolkit emite um aviso informativo (`console.warn`) e prossegue utilizando as variáveis de ambiente já carregadas no sistema ou do arquivo `.env` na raiz, impedindo que a suíte falhe na inicialização.
+> Se `config/.env.<TEST_ENV>` não existir, o toolkit emite um aviso no console (`console.warn`) e prossegue com as variáveis do sistema ou do arquivo `.env` da raiz, evitando falhas de inicialização.
 
 ---
 
-## 📦 Como Utilizar este Toolkit em Outro Projeto
+## ⚖️ Diferenças Chave em Relação ao Cypress
 
-Para consumir o toolkit em uma aplicação ou repositório existente:
-
-1. **Copie a pasta `src/`**:
-   Copie a pasta `src/` deste repositório para o seu projeto de destino.
-2. **Instale as dependências necessárias**:
-   ```bash
-   npm i -D @playwright/test typescript dotenv @types/node cross-env
-   ```
-3. **Configure o `playwright.config.ts`**:
-   Garanta que seu arquivo de configuração inclua o carregador de `.env` baseado em `TEST_ENV` e aponte para `src/fixtures/customFixtures.ts`.
-4. **Importe as fixtures em seus testes**:
-   ```typescript
-   import { test, expect, DataGenerator } from "../src";
-
-   test("meu teste", async ({ page, ui, auth, api }) => {
-     // Acesso total a todos os helpers tipados!
-   });
-   ```
-
----
-
-## ⚖️ Diferenças em Relação ao Cypress
-
-Se a sua equipe possui histórico com Cypress, observe as vantagens e diferenças fundamentais desta arquitetura no Playwright:
-
-| Aspecto | Cypress | Playwright TS Toolkit |
+| Recurso / Conceito | Cypress Legado | Playwright TypeScript Toolkit |
 | :--- | :--- | :--- |
-| **Actionability & Auto-waiting** | Requer plugins ou repetições manuais. `force: true` frequente mascarava bugs de UI. | Auto-waiting nativo do Playwright. Os helpers usam `force: false` por padrão, garantindo que o elemento esteja visível, estável e receptivo. |
-| **Comandos Customizados** | Comandos globais acoplados via `Cypress.Commands.add` e `cy.*`, exigindo arquivos complexos de tipagem global (`index.d.ts`). | **Custom Fixtures tipadas** (`ui`, `auth`, `api`) estendidas via `test.extend`. Autocompletion perfeito, sem poluição global e com isolamento estrito entre threads. |
-| **Autenticação e Sessão** | `cy.session` grava em cache de browser proprietário do Cypress. | `AuthHelper` limpa cookies/storage no contexto nativo (`BrowserContext`), garantindo isolamento total por teste. |
-| **Downloads de Arquivos** | Exigia tasks em Node.js (`cy.task`) e busca de arquivos no disco via `glob`. | Captura nativa assíncrona com `page.waitForEvent("download")`, inspecionando o stream do browser sem dependências externas. |
-| **Chamadas de API** | `cy.request` é enfileirado na mesma fila da interface. | `ApiHelper` utiliza `APIRequestContext` do Playwright em chamadas assíncronas assíncronas reais (`async/await`), executando em frações de segundo. |
+| **Actionability & Auto-waiting** | Depende de plugins ou chamadas repetidas; uso frequente de `{ force: true }` mascarando defeitos visuais. | Auto-waiting nativo do Playwright com `force: false` por padrão, verificando visibilidade, estabilidade e receptividade. |
+| **Comandos Globais vs Fixtures** | Poluição do objeto global `cy.*` com `Cypress.Commands.add` e arquivos complexos de tipagem (`index.d.ts`). | **Custom Fixtures isoladas** via `test.extend<CustomFixtures>`. Tipagem estrita e autocomplete perfeito no editor. |
+| **Downloads de Arquivos** | Necessitava de tarefas Node.js (`cy.task`) e leitura de disco via bibliotecas externas (`glob`). | Captura nativa assíncrona com `page.waitForEvent("download")` sem depender do sistema operacional. |
+| **Requisições de API** | Enfileiradas na mesma fila de execução da interface (`cy.request`). | Chamadas assíncronas reais (`async/await`) via `APIRequestContext`, executando de forma instantânea. |
+| **Isolamento de Sessão** | `cy.session` persiste em cache proprietário do navegador. | `AuthHelper` gerencia cookies e storage nativos do `BrowserContext` de forma limpa por teste. |
 
 ---
 
 ## 🏆 Boas Práticas de Automação
 
-1. **Prefira Localizadores Acessíveis**:
-   - Dê preferência aos seletores recomendados pelo Playwright: `getByRole`, `getByLabel`, `getByTestId` e `getByText`.
-2. **Evite `waitForTimeout` e `networkidle`**:
-   - `page.waitForTimeout` introduz lentidão e fragilidade (*flakiness*).
-   - `networkidle` é desencorajado pelo time oficial do Playwright em SPAs modernas com polling ou websockets. Prefira aguardar o elemento ou resposta de API específica via `waitForResponse`.
-3. **Use API Seeding para Preparação de Dados**:
-   - Não crie clientes, pedidos ou cadastros complexos via interface para preparar outros testes. Utilize `api.seedRecordViaAPI` para injetar os dados no banco em milissegundos e abra a UI direto no registro criado.
-4. **Utilize `storageState` para Sessões Persistentes**:
-   - Em suítes extensas, faça o login uma única vez no `globalSetup` salvando o estado de cookies e storage em um arquivo JSON (`storageState`) e injete esse arquivo nos testes subsequentes para pular a tela de login.
+1. **Priorize Localizadores Acessíveis**:
+   - Utilize seletores resilientes e orientados ao usuário: `getByRole`, `getByLabel`, `getByTestId` e `getByText`.
+2. **Elimine Esperas Estáticas (`waitForTimeout`)**:
+   - Nunca utilize pausas cegas. Confie no auto-waiting do Playwright ou em helpers como `reloadUntilVisible` e `clickUntilVisible`.
+3. **Evite `networkidle` em Aplicações Reativas**:
+   - `networkidle` pode travar a automação em aplicações com websockets ou polling constante. Prefira aguardar o elemento ou uma rota específica via `page.waitForResponse`.
+4. **Use API Seeding para Geração de Massa**:
+   - Não crie cadastros complexos via UI apenas para servir de pré-requisito para outro teste. Injete os dados via `api.seedRecordViaAPI` em milissegundos.
+5. **Aproveite o `storageState` para Pular Telas de Login**:
+   - Em suítes extensas, autentique-se uma vez no setup global e compartilhe o arquivo de estado entre os testes para economizar minutos de execução.
 
 ---
 
-## 🧪 Execução e Scripts
+## 📦 Como Adotar em Outro Projeto
 
-| Comando | Descrição |
-| :--- | :--- |
-| `npm test` | Executa todos os testes em modo headless com Chromium |
-| `npm run test:headed` | Executa os testes abrindo o navegador visível |
-| `npm run test:ui` | Abre o **Playwright UI Mode** interativo para depuração visual passo a passo |
-| `npm run test:qa` | Executa os testes carregando as variáveis de `config/.env.qa` |
-| `npm run test:staging`| Executa os testes carregando as variáveis de `config/.env.staging` |
-| `npm run test:prod` | Executa os testes carregando as variáveis de `config/.env.prod` |
-| `npm run report` | Abre o relatório HTML detalhado da última execução (`playwright show-report`) |
-| `npm run typecheck` | Executa validação estrita de tipos TypeScript sem gerar arquivos (`tsc --noEmit`) |
+1. Copie o diretório `src/` para o seu projeto.
+2. Instale as dependências:
+   ```bash
+   npm i -D @playwright/test typescript dotenv @types/node cross-env
+   ```
+3. Integre as configurações do `playwright.config.ts` à sua suite.
+4. Importe e utilize diretamente:
+   ```typescript
+   import { test, expect, DataGenerator } from "./src";
+   ```
 
 ---
 
-## 📄 Licença
+## 🧪 Scripts Disponíveis
 
-Distribuído sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+| Script | Comando | Descrição |
+| :--- | :--- | :--- |
+| `npm test` | `playwright test` | Executa todos os testes em modo headless com Chromium |
+| `npm run test:headed` | `playwright test --headed` | Executa os testes abrindo o navegador visível |
+| `npm run test:ui` | `playwright test --ui` | Abre o **Playwright UI Mode** interativo para depuração visual passo a passo |
+| `npm run test:qa` | `cross-env TEST_ENV=qa playwright test` | Executa os testes apontando para `config/.env.qa` |
+| `npm run test:staging` | `cross-env TEST_ENV=staging playwright test` | Executa os testes apontando para `config/.env.staging` |
+| `npm run test:prod` | `cross-env TEST_ENV=prod playwright test` | Executa os testes apontando para `config/.env.prod` |
+| `npm run report` | `playwright show-report` | Exibe o relatório HTML detalhado da última execução |
+| `npm run typecheck` | `tsc --noEmit` | Executa validação de tipos TypeScript sem gerar arquivos |
 
-**Autor**: Matheus Neves
+---
+
+## 🔄 Pipeline CI/CD
+
+O repositório inclui um workflow otimizado para o **GitHub Actions** ([.github/workflows/ci.yml](file:///.github/workflows/ci.yml)):
+- Executa em Ubuntu com Node.js 20 LTS e cache de dependências NPM.
+- Instala o Chromium com as bibliotecas nativas do sistema operacional.
+- Executa validação estrita de tipos (`npm run typecheck`).
+- Roda todos os testes de forma paralela (`npm test`).
+- Faz upload automático do relatório HTML do Playwright como artefato (`if: always()`).
+
+---
+
+## 📄 Licença e Autoria
+
+Distribuído sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+**Autor**: Matheus Neves  
+**E-mail**: mthsnevesdev@outlook.com  
+**Repositório**: [https://github.com/mthsneves/playwright-typescript-toolkit](https://github.com/mthsneves/playwright-typescript-toolkit)

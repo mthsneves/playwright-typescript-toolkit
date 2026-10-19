@@ -1,5 +1,5 @@
 {
-  "name": "playwright-ts-toolkit",
+  "name": "playwright-typescript-toolkit",
   "version": "1.0.0",
   "description": "Toolkit de helpers, fixtures e utilitários para automação Playwright + TypeScript",
   "main": "src/index.ts",
